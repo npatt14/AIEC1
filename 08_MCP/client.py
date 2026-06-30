@@ -133,10 +133,26 @@ def format_agent_response(result: dict[str, Any]) -> str:
     return json.dumps(content, indent=2, default=str)
 
 
+# walks the agent's message history and collects every MCP tool the model decided to call this turn
+def extract_tool_calls(result: dict[str, Any]) -> list[tuple[str, dict]]:
+    calls: list[tuple[str, dict]] = []
+    for message in result["messages"]:
+        for call in getattr(message, "tool_calls", None) or []:
+            calls.append((call["name"], call.get("args", {})))
+    return calls
+
+
 async def ask_agent(agent: Any, prompt: str) -> None:
     result = await agent.ainvoke(
         {"messages": [{"role": "user", "content": prompt}]}
     )
+
+    tool_calls = extract_tool_calls(result)
+    if tool_calls:
+        print("\nMCP tools called:")
+        for name, args in tool_calls:
+            print(f"  - {name}({json.dumps(args)})")
+
     print("\nCat Shop:\n")
     print(format_agent_response(result))
 

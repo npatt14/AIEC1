@@ -119,6 +119,29 @@ async def remove_from_cart(product_id: int) -> dict:
 
 
 @mcp.tool()
+async def clear_cart() -> dict:
+    """Empty your shopping cart completely, removing every item at once."""
+    username = await _get_username()
+    db = await oauth_provider._get_db()
+    cursor = await db.execute(
+        "DELETE FROM cart_items WHERE username = ?",
+        (username,),
+    )
+    await db.commit()
+    if cursor.rowcount == 0:
+        return {
+            "success": True,
+            "message": "Your cart was already empty",
+            "items_removed": 0,
+        }
+    return {
+        "success": True,
+        "message": f"Cleared {cursor.rowcount} item(s) from your cart",
+        "items_removed": cursor.rowcount,
+    }
+
+
+@mcp.tool()
 async def checkout() -> dict:
     """Complete your purchase. Shows order summary and clears the cart."""
     username = await _get_username()

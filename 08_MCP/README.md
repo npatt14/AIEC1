@@ -155,7 +155,23 @@ Why is OAuth important for MCP servers, and what security considerations should 
 
 #### Answer
 
-_(insert your answer here)_
+It matters because the moment you expose an MCP server publicly, anything that can reach the URL can call your tools, and these tools aren't read-only. 
+
+They maintain a lot of control over your system and your data, so you need a way to know who's calling and whether they're even allowed to. 
+
+The security considerations are mostly about not trusting the agent blindly. You'll want to scope what the token can actually do, so a client that's only supposed to browse can't check out. 
+
+You'll also want to make sure the server validates the token on every tool call, not just at the time of connection. 
+
+The token issuer also has to match the public URL that clients actually use, or the OAuth chain is going to break, which is the server being strict about who it trusts. 
+
+Beyond the OAuth itself, the bigger consideration is that you are handing tools to a model that can be steered by its inputs. 
+
+We can't rely on the client actually behaving. The server has to enforce limits. 
+
+For example, we could validate and sanitize the arguments coming into each tool and make sure that we don't expose them more than the tool needs. 
+
+Also, we assume a tool could be called in the wrong order or with bad input, since an AI client might do exactly that. 
 
 ### Question #2
 
@@ -163,7 +179,15 @@ What is Streamable HTTP transport in MCP, and why might you expose a server publ
 
 #### Answer
 
-_(insert your answer here)_
+Streamable HTTP is what lets the MCP server run as a normal web service at a URL that clients are able to reach over HTTP, and it can hold the connection open to stream results back as they come. 
+
+STDIO is the other option, where the client launches the server as a local subprocess and talks to it over standard in and out. 
+
+It's very simple, but it only works locally and only for the one client that started it. You'd go public with streamable HTTP plus OAuth when you want the server to be a real shared service instead of a local subprocess, meaning multiple clients running on its own infrastructure reachable from anywhere.
+
+The *catch* is that standard in/out got its security from just being local, where the only thing that could call it was the process that actually launched it. 
+
+Once it's at a public URL, anyone can hit it, so OAuth is what replaces that and it's what controls who's actually allowed to call the tools. 
 
 ## Activity 1: Extend the MCP Server
 
