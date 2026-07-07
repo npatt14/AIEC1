@@ -428,7 +428,11 @@ Why does LangSmith deploy your agent as an API backend only, and why do you stil
 
 #### Answer
 
-_(insert your answer here)_
+LangSmith is just packaging and hosting the graph, the exact same thing `langgraph dev` runs on your own machine, just moved onto real infrastructure. What you get back is routes for threads, runs, and assistants, plus tracing on top of it. It was never going to render a page for anyone, it's just not built to serve HTML or static assets to a browser.
+
+A frontend and an agent API are two different jobs that speak two different protocols. Something has to render the actual chat UI a person clicks around in, handle routing, and serve static assets, and that's a website's job, not an API's.
+
+That's why Vercel is still in the picture even after the agent is deployed. It hosts the Next.js site, and that site's only job is to call into the agent API and stream the response back into the chat. Two separate hosts doing two separate things: LangSmith runs the graph, Vercel serves the site that talks to it.
 
 ### Question #2
 
@@ -436,7 +440,11 @@ Why should the LangSmith API key live in a Next.js API route (server-side) inste
 
 #### Answer
 
-_(insert your answer here)_
+The API key is what authorizes calls into the deployed agent, so wherever it lives is exactly what anyone with devtools open can go read. The browser isn't a private place, it downloads the JS bundle straight to the user's machine, so any env var without the `NEXT_PUBLIC_` prefix that still ends up referenced client-side gets baked right into that bundle for anyone to copy.
+
+Routing it through a Next.js API route keeps the key server-side only. The browser just calls your own domain's `/api` route, and that route is the one making the authenticated request out to the LangSmith deployment URL, injecting the key itself before it ever leaves your server.
+
+If the key leaked into the client bundle, anyone could lift it and start hitting your deployment directly on your account, running up cost or worse. So the key has to be something only your server code ever touches, never something the browser executes or can inspect.
 
 ## Activity 1: Build a Helpfulness Loop in Production
 

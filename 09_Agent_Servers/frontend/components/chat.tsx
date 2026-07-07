@@ -21,9 +21,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { getMessageText, toolLabel } from "@/lib/messages";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
-
-type StreamMessage = ReturnType<typeof useStream>["messages"][number];
+type StreamHandle = ReturnType<typeof useStream>;
+type StreamMessage = StreamHandle["messages"][number];
 
 const SUGGESTIONS = [
   "How often should I deworm my cat?",
@@ -37,8 +36,7 @@ function toolIcon(name?: string) {
   return <Wrench className="size-3" />;
 }
 
-export function Chat({ assistantId }: { assistantId: string }) {
-  const stream = useStream({ apiUrl: API_URL, assistantId });
+export function Chat({ stream }: { stream: StreamHandle }) {
   const { messages, isLoading, error } = stream;
 
   const [input, setInput] = useState("");

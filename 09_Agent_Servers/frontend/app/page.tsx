@@ -1,27 +1,44 @@
 "use client";
 
-import { Cat } from "lucide-react";
+import { useStream } from "@langchain/react";
 
+import { AgentSidebar } from "@/components/agent-sidebar";
 import { Chat } from "@/components/chat";
+import { Badge } from "@/components/ui/badge";
 
 const ASSISTANT_ID = "simple_agent";
+const MODEL = process.env.NEXT_PUBLIC_MODEL ?? "gpt-5.4-mini";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
 export default function Page() {
-  return (
-    <main className="flex h-dvh flex-col">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-4 py-3">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Cat className="size-4" />
-          </div>
-          <div className="leading-tight">
-            <p className="text-sm font-medium">Cat Health Agent</p>
-            <p className="text-xs text-muted-foreground">LangGraph + Next.js</p>
-          </div>
-        </div>
-      </header>
+  const stream = useStream({ apiUrl: API_URL, assistantId: ASSISTANT_ID });
 
-      <Chat assistantId={ASSISTANT_ID} />
-    </main>
+  return (
+    <div className="flex h-dvh w-full">
+      <AgentSidebar
+        assistantId={ASSISTANT_ID}
+        model={MODEL}
+        isLoading={stream.isLoading}
+        isError={stream.error != null}
+      />
+
+      <main className="flex min-h-0 flex-1 flex-col">
+        <header className="flex items-center justify-between border-b bg-background px-6 py-3">
+          <div className="leading-tight">
+            <p className="text-sm font-medium">Chat</p>
+            <p className="text-xs text-muted-foreground">
+              Threadless run &middot; streamed via API passthrough
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="font-mono text-[10px]">
+              {MODEL}
+            </Badge>
+          </div>
+        </header>
+
+        <Chat stream={stream} />
+      </main>
+    </div>
   );
 }
