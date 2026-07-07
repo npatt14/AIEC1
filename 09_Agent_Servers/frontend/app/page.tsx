@@ -8,10 +8,15 @@ import { Badge } from "@/components/ui/badge";
 
 const ASSISTANT_ID = "simple_agent";
 const MODEL = process.env.NEXT_PUBLIC_MODEL ?? "gpt-5.4-mini";
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
+
+function resolveApiUrl() {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== "undefined") return `${window.location.origin}/api`;
+  return "/api";
+}
 
 export default function Page() {
-  const stream = useStream({ apiUrl: API_URL, assistantId: ASSISTANT_ID });
+  const stream = useStream({ apiUrl: resolveApiUrl(), assistantId: ASSISTANT_ID });
 
   return (
     <div className="flex h-dvh w-full">
