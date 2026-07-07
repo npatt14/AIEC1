@@ -82,16 +82,28 @@ Follow these steps to prepare and submit your homework assignment:
 What is the difference between serverless and dedicated endpoints?
 
 #### ✅ Answer:
+Serverless is basically a shared pool, you hit infra that fireworks already has running the model and you just pay per token.
 
-_(insert your answer here)_
+There's no deployment step and no idle cost, but also no capacity guarantee, if the shared pool is busy your request can queue behind everyone elses.
+
+Dedicated is the opposite, you spin up your own instance(s) that only serve you, so latency is way more consistent and theres no noisy neighbor problem, but your paying by the hour whether you're actually sending traffic or not.
+
+Its really just the classic pay-per-use vs pay-for-guaranteed-capacity tradeoff. Dedicated starts to make sense once your traffic is high/predictable enough that the hourly rate beats per-token cost, serverless makes more sense for spiky or low traffic, or honestly for just testing stuff out like we did in this notebook.
 
 ### ❓ Question #2:
 
 Why is it important to consider token throughput and latency when choosing an LLM for user-facing applications?
 
 #### ✅ Answer:
+Because theres an actual human sitting there staring at a loading spinner, time to first token plus tokens/sec is basically the perceived speed of your whole app.
 
-_(insert your answer here)_
+If throughput is low, even a genuinely good answer can take several seconds to stream out, and that just reads as slow or broken to a user regardless of quality.
+
+It compounds too, once you have multi step stuff like agents or RAG with tool calls, every hop adds its own wait, so a slow endpoint isnt just adding delay once, its multiplying it across the whole chain.
+
+Theres a cost/scale angle too, higher throughput usually means you can serve more concurrent users off the same deployment, so its not purely a UX thing, its also literally how many users you can support before you need another replica.
+
+So for anything user facing you cant just pick whatever model tops the benchmark leaderboard, you actually have to test real throughput and latency under load (which is what the slam test in this notebook is doing), becuase a smarter model that takes 10 seconds to respond can feel worse to a user than a slightly dumber one that responds in 1.
 
 ## Activity 1: RAGAS Evaluation with Cost Analysis
 
