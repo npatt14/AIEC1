@@ -65,7 +65,13 @@ In `01_Cat_Health_Agent_Guardrails.ipynb`, input rails run in a specific order: 
 
 #### ✅ Answer
 
-_(insert your answer here)_
+The deterministic checks go first because theyre cheap, instant, and they dont depend on a model being up or behaving. Emergency, injection, PII, thats plain code, it runs in basically no time and it cant be talked out of its answer. The topical guard is a model call, so its slower, it costs a token spend, and its itself something an injection could try to steer. You dont want to pay for that or lean on it until the obvious stuff is already handled.
+
+Theres a safety ordering to it too. If someone is describing a real emergency I want that caught before anything else even looks at the message, and if theres PII in there I want it redacted before it reaches the model call at all. Running the model guard first would mean shipping exactly the stuff you're trying to protect through the thing you dont fully trust yet.
+
+The reason the rails return escalate, block, and rewrite instead of true/false is that a boolean throws away everything about what to actually do next. Not every bad input is bad the same way.
+
+An emergency should escalate to a human, an injection attempt should get blocked outright, a message with PII in it shouldnt be rejected, it should get rewritten with the PII stripped and then keep going. Thats three completely different responses and a pass/fail flag cant tell them apart. The decision has to carry the reason so the loop knows which path to take.
 
 ### ❓ Question #2
 
@@ -73,7 +79,13 @@ In `02_Cat_Health_Agent_Caching.ipynb`, a semantic cache can serve a paraphrased
 
 #### ✅ Answer
 
-_(insert your answer here)_
+Because the threshold is measuring the wrong thing. Semantic similarity is about how close two sentences are in meaning overall, and "what plants can my cat treat with" and "what plants can poison my cat" are almost the entire same sentence with one word swapped. To the embedding theyre extremely close. The one word that flips the whole meaning is a tiny piece of the vector, so no threshold cleanly splits them, tighten it enough to reject that pair and you start rejecting the real paraphrases you actually wanted to hit.
+
+Its not a tuning problem, its that similarity just isnt the same thing as safe to reuse this answer. Two questions can be 98% alike and have opposite correct answers. No single number catches that.
+
+So for high stakes queries the move is dont serve them off the semantic cache at all. Anything in that bucket, health, dosing, anything where a wrong answer hurts the cat, goes to the real model every time and you eat the cost. The cache is fine for the low stakes stuff like store hours or a general FAQ where a near miss is harmless.
+
+And if you really do want caching on the risky path it cant be similarity alone, youd need something like an exact match cache, or a check that actually verifies the cached answer still applies to this exact question before handing it back, instead of trusting that close enough in embedding space means safe.
 
 ## Submitting Your Homework
 

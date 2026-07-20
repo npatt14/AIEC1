@@ -66,7 +66,13 @@ While scaffolding in Task 3 you used **plan mode** before letting Claude Code wr
 
 #### ✅ Answer
 
-_(insert your answer here)_
+Because the agent isnt just suggesting commands, its actually able to run them on my machine. Read a file, sure, but also delete one, overwrite something, push to a remote. Once a model can touch the shell a bad guess isnt a wrong sentence, its a real side effect I have to go clean up.
+
+The permission system is what keeps a human in the loop before anything irreversible happens. It lets the agent move fast on the safe stuff and stop to ask on the stuff that actually changes state.
+
+Plan mode matters most at the start because thats exactly when the agent knows the least. Empty directory, no code to read, its basically guessing at what I want. If it just started writing files off that guess I'd end up with a pile of structure I never asked for and have to unwind.
+
+So plan mode makes it lay the whole approach out first, no writes, and I get to catch the wrong assumption while its still just words instead of files on disk. Its a lot cheaper to fix a plan than to fix a repo the agent already scaffolded wrong.
 
 ### ❓ Question #2
 
@@ -74,7 +80,13 @@ _(insert your answer here)_
 
 #### ✅ Answer
 
-_(insert your answer here)_
+CLAUDE.md is the stuff I want the agent to know every single session without me retyping it. Project conventions, how the code is laid out, the command to run the tests, the rules I actually care about like keep comments minimal. Durable facts about the project that dont change day to day.
+
+What doesnt belong is anything one-off or that goes stale fast. The task I'm on right now, notes about a specific bug, a giant dump of the whole codebase. That either belongs in the actual prompt or it just rots and starts lying to the agent a week later.
+
+The Session 3 connection is that context is a budget, not free space. CLAUDE.md gets loaded into the window on every session, so every line I put in there is permanent rent against the context I have left for the real work.
+
+So its the same tradeoff as agent memory, you keep the small set of durable things worth carrying every turn and let everything else stay out of the window until its actually needed. Stuffing it full doesnt make the agent smarter, it just crowds out room for the task.
 
 ### ❓ Question #3
 
@@ -82,7 +94,13 @@ The Agent SDK gives you the same agent loop that powers Claude Code. Compare thi
 
 #### ✅ Answer
 
-_(insert your answer here)_
+The SDK hands me the whole agent loop that runs Claude Code. The model calls a tool, the tool runs, the result goes back, it decides the next step, and all that looping and context management is already done. Same with the built in tools like Read, Glob, and Grep, and the permission handling. In LangGraph I was wiring all of that myself, the nodes, the edges, the state, deciding when the loop even ends.
+
+So what I get for free is basically the entire harness. I write a prompt and my one custom tool and the loop just works, which is a lot less code than the graphs I built back in sessions 2 through 4.
+
+What I give up is control over the middle. With LangGraph I could see every node and force the exact path, drop in a step, branch on a condition, inspect the state between hops. The SDK loop is more of a black box, the model picks the order and I steer it through the prompt and the tool allowlist instead of hard wiring the flow.
+
+Its the usual tradeoff. LangGraph when I need to own the exact control flow, the SDK when I just want a capable agent running and dont feel like rebuilding the loop. For a chat app answering questions about a repo the SDK is the easy call, I dont need a custom graph for that.
 
 ### ❓ Question #4
 
@@ -90,7 +108,13 @@ Your chat app could have called a chat completions API directly, the way you did
 
 #### ✅ Answer
 
-_(insert your answer here)_
+A plain chat completion can only talk. It reads what I gave it and writes text back, thats the whole range. Routing through query() means the agent can actually go get what it needs, read the files, grep the repo, run its own steps, before it answers. So for a codebase concierge the answers are grounded in the real repo instead of whatever the model happens to remember about it.
+
+The catch is the same thing that makes it useful. A plain completion cant do anything to my machine, worst case it says something wrong. An agent with tools can read files it shouldnt, or get talked into running something bad if a prompt injection sneaks in through a file it reads.
+
+The allowlist handles the first part. I only give it the tools the job actually needs, Read, Glob, Grep, my custom one, and nothing that writes or deletes. So even if it decides to do something dumb, the tools to cause real damage just arent on the table.
+
+Permission mode handles the rest, the stuff thats not obviously safe stops and asks me before it runs instead of just going. Between the two its the same idea as the MCP server back in Session 8, dont trust the model to behave, scope what its even able to do and keep a human on the irreversible stuff.
 
 ## Activity 1: Level Up the Chat App
 

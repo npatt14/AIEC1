@@ -12,3 +12,8 @@ CLAUDE.md
 00_Docs/Certification Challenge/Conclusion.md
 00_Docs/Certification Challenge/Finch_Complete_Walkthrough.md
 00_Docs/Certification Challenge/Loom_Script.md
+00_Docs/Certification Challenge/*.md
+00_Docs/Certification Challenge/eval_summary.*
+00_Docs/Certification Challenge/*.svg
+00_Docs/Certification Challenge/*.excalidraw
+!00_Docs/Certification Challenge/README.md
